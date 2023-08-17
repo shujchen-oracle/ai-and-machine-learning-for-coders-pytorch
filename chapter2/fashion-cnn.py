@@ -18,16 +18,17 @@ test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=64, s
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
-        self.conv1 = nn.Conv2d(1, 64, 3, padding=1)
+        self.conv1 = nn.Conv2d(1, 64, kernel_size=(3, 3), padding=1)
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(64, 64, 3, padding=1)
-        self.fc1 = nn.Linear(64 * 7 * 7, 128)
+        self.conv2 = nn.Conv2d(64, 64, kernel_size=(3, 3), padding=1)
+        self.flatten = nn.Flatten()
+        self.fc1 = nn.Linear(64 * 7 * 7, 128) # 5,5,64 with padding 1 => 7,7,64
         self.fc2 = nn.Linear(128, 10)
 
     def forward(self, x):
         x = self.pool(torch.relu(self.conv1(x)))
         x = self.pool(torch.relu(self.conv2(x)))
-        x = x.view(-1, 64 * 7 * 7)
+        x = self.flatten(x)
         x = torch.relu(self.fc1(x))
         x = torch.softmax(self.fc2(x), dim=1)
         return x
@@ -41,6 +42,9 @@ epochs = 50
 for epoch in range(epochs):
     model.train()
     for image, label in train_loader:
+
+        print(image)
+        print(label)
 
         image = image.to(device)
         label = label.to(device)
